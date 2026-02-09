@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1200px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .content { padding: 40px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 5px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: #dc3545; }
+        .btn-success { background: #28a745; }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .lead-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .lead-card h3 { color: #333; margin-bottom: 10px; }
+        .lead-card p { margin: 5px 0; color: #666; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-new { background: #e3f2fd; color: #1976d2; }
+        .status-contacted { background: #fff3e0; color: #f57c00; }
+        .status-qualified { background: #e8f5e9; color: #388e3c; }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .hidden { display: none; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Lead Management System</h1>
+            <p>Manage your leads efficiently</p>
+            <button class="btn btn-secondary logout-btn hidden" id="logoutBtn" onclick="logout()">Logout</button>
+        </div>
+        <div class="content">
+            <!-- Login Page -->
+            <div id="loginPage" class="page active">
+                <h2>Login</h2>
+                <div id="loginAlert"></div>
+                <form onsubmit="login(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" value="admin@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" value="admin123" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <p style="color: #666;">- OR -</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="loginWithGoogle()">
+                        🔐 Login with Google
+                    </button>
+                </form>
+            </div>
+            <!-- Dashboard -->
+            <div id="dashboardPage" class="page">
+                <h2>Welcome, <span id="userName"></span>!</h2>
+                <p id="userRole"></p>
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="showPage('leadsPage')">My Leads</button>
+                    <button class="btn btn-secondary hidden" id="adminBtn" onclick="showPage('adminPage')">User Management</button>
+                </div>
+            </div>
+            <!-- Leads Page -->
+            <div id="leadsPage" class="page">
+                <h2>My Leads</h2>
+                <button class="btn" onclick="showPage('dashboardPage')">← Back</button>
+                <button class="btn btn-success" onclick="showCreateLead()">+ Create Lead</button>
+                <div id="leadsAlert"></div>
+                <div id="leadsList" style="margin-top: 20px;"></div>
+                <div id="leadForm" class="hidden" style="margin-top: 20px;">
+                    <h3>Create New Lead</h3>
+                    <form onsubmit="saveLead(event)">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="leadName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="leadEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="leadPhone">
+                        </div>
+                        <div class="form-group">
+                            <label>Company</label>
+                            <input type="text" id="leadCompany">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="leadStatus">
+                                <option value="new">New</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="qualified">Qualified</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideLeadForm()">Cancel</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Admin Page -->
+            <div id="adminPage" class="page">
+                <h2>User Management</h2>
+                <button class="btn" onclick="showPage('dashboardPage')">← Back</button>
+                <button class="btn btn-success" onclick="showCreateUser()">+ Create User</button>
+                <div id="adminAlert"></div>
+                <div id="usersList" style="margin-top: 20px;"></div>
+                <div id="userForm" class="hidden" style="margin-top: 20px;">
+                    <h3>Create User</h3>
+                    <form onsubmit="createUser(event)">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="newUserEmail" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Create</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideUserForm()">Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+        let token = null;
+        let user = null;
+        let editingLeadId = null;
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (id === 'leadsPage') loadLeads();
+            if (id === 'adminPage') loadUsers();
+        }
+
+        function showAlert(id, msg, type = 'success') {
+            const el = document.getElementById(id);
+            el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+            setTimeout(() => el.innerHTML = '', 5000);
+        }
+
+        async function login(e) {
+            e.preventDefault();
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    token = data.access_token;
+                    await loadUser();
+                    showPage('dashboardPage');
+                    document.getElementById('logoutBtn').classList.remove('hidden');
+                } else {
+                    showAlert('loginAlert', data.detail, 'error');
+                }
+            } catch (err) {
+                showAlert('loginAlert', 'Server error. Is backend running?', 'error');
+            }
+        }
+
+        async function loadUser() {
+            const res = await fetch(`${API_URL}/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            user = await res.json();
+            document.getElementById('userName').textContent = user.full_name || user.email;
+            document.getElementById('userRole').textContent = user.is_admin ? '(Admin)' : '';
+            if (user.is_admin) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            }
+        }
+
+        async function loadLeads() {
+            const res = await fetch(`${API_URL}/leads/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const leads = await res.json();
+            const list = document.getElementById('leadsList');
+            if (leads.length === 0) {
+                list.innerHTML = '<p>No leads. Create one!</p>';
+                return;
+            }
+            list.innerHTML = leads.map(l => `
+                <div class="lead-card">
+                    <h3>${l.full_name}</h3>
+                    <p><strong>Email:</strong> ${l.email}</p>
+                    <p><strong>Phone:</strong> ${l.phone || 'N/A'}</p>
+                    <p><strong>Company:</strong> ${l.company || 'N/A'}</p>
+                    <p><strong>Status:</strong> <span class="status-badge status-${l.status}">${l.status}</span></p>
+                    <button class="btn btn-secondary" onclick="editLead(${l.id})">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteLead(${l.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function showCreateLead() {
+            editingLeadId = null;
+            document.getElementById('leadForm').classList.remove('hidden');
+            document.getElementById('leadsList').classList.add('hidden');
+            document.getElementById('leadName').value = '';
+            document.getElementById('leadEmail').value = '';
+            document.getElementById('leadPhone').value = '';
+            document.getElementById('leadCompany').value = '';
+            document.getElementById('leadStatus').value = 'new';
+        }
+
+        function hideLeadForm() {
+            document.getElementById('leadForm').classList.add('hidden');
+            document.getElementById('leadsList').classList.remove('hidden');
+        }
+
+        async function saveLead(e) {
+            e.preventDefault();
+            const data = {
+                full_name: document.getElementById('leadName').value,
+                email: document.getElementById('leadEmail').value,
+                phone: document.getElementById('leadPhone').value,
+                company: document.getElementById('leadCompany').value,
+                status: document.getElementById('leadStatus').value
+            };
+            const url = editingLeadId ? `${API_URL}/leads/${editingLeadId}` : `${API_URL}/leads/`;
+            const method = editingLeadId ? 'PATCH' : 'POST';
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                showAlert('leadsAlert', 'Lead saved!', 'success');
+                hideLeadForm();
+                loadLeads();
+            }
+        }
+
+        async function editLead(id) {
+            const res = await fetch(`${API_URL}/leads/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const lead = await res.json();
+            editingLeadId = id;
+            document.getElementById('leadName').value = lead.full_name;
+            document.getElementById('leadEmail').value = lead.email;
+            document.getElementById('leadPhone').value = lead.phone || '';
+            document.getElementById('leadCompany').value = lead.company || '';
+            document.getElementById('leadStatus').value = lead.status;
+            document.getElementById('leadForm').classList.remove('hidden');
+            document.getElementById('leadsList').classList.add('hidden');
+        }
+
+        async function deleteLead(id) {
+            if (!confirm('Delete this lead?')) return;
+            await fetch(`${API_URL}/leads/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            showAlert('leadsAlert', 'Lead deleted!', 'success');
+            loadLeads();
+        }
+
+        async function loadUsers() {
+            const res = await fetch(`${API_URL}/users/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const users = await res.json();
+            document.getElementById('usersList').innerHTML = users.map(u => `
+                <div class="lead-card">
+                    <h3>${u.full_name || 'Not Set'}</h3>
+                    <p><strong>Email:</strong> ${u.email}</p>
+                    <p><strong>Status:</strong> ${u.is_active ? '✅ Active' : '⏳ Pending'}</p>
+                    ${u.id !== user.id ? `<button class="btn btn-danger" onclick="deleteUser(${u.id})">Delete</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function showCreateUser() {
+            document.getElementById('userForm').classList.remove('hidden');
+            document.getElementById('usersList').classList.add('hidden');
+        }
+
+        function hideUserForm() {
+            document.getElementById('userForm').classList.add('hidden');
+            document.getElementById('usersList').classList.remove('hidden');
+        }
+
+        async function createUser(e) {
+            e.preventDefault();
+            const res = await fetch(`${API_URL}/users/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    email: document.getElementById('newUserEmail').value,
+                    is_admin: false
+                })
+            });
+            if (res.ok) {
+                showAlert('adminAlert', 'User created! Email sent.', 'success');
+                hideUserForm();
+                loadUsers();
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Delete this user?')) return;
+            await fetch(`${API_URL}/users/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            showAlert('adminAlert', 'User deleted!', 'success');
+            loadUsers();
+        }
+
+        function logout() {
+            token = null;
+            user = null;
+            document.getElementById('logoutBtn').classList.add('hidden');
+            showPage('loginPage');
+        }
+
+        function loginWithGoogle() {
+            window.location.href = `${API_URL}/auth/google/login`;
+        }
+
+        // Check for token in URL (from Google redirect)
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token');
+            
+            if (tokenFromUrl) {
+                token = tokenFromUrl;
+                loadUser().then(() => {
+                    showPage('dashboardPage');
+                    document.getElementById('logoutBtn').classList.remove('hidden');
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            }
+        };
+    </script>
+</body>
+</html>
