@@ -2,7 +2,9 @@ Lead Management System
 A production-ready full-stack lead management application with dual authentication methods, role-based access control, and automated email workflows.
 Overview
 Lead Management System is a comprehensive CRM solution designed to streamline customer relationship management. Built with modern web technologies, it provides enterprises and small businesses with tools to efficiently track, manage, and convert leads through an intuitive interface.
+
 Key Features
+
 Authentication & Security
 
 Dual authentication system supporting traditional email/password and Google OAuth 2.0
@@ -38,7 +40,9 @@ Modern gradient-based visual design
 Real-time form validation
 Optimized for desktop and mobile devices
 
+
 Technical Architecture
+
 Backend Stack
 
 FastAPI: High-performance Python web framework
@@ -64,6 +68,7 @@ Session management via secure cookies
 CORS configuration for cross-origin requests
 
 Installation Guide
+
 Prerequisites
 
 Python 3.11 or higher
@@ -124,7 +129,7 @@ Default administrator credentials:
 Note: Change the default admin password immediately after first login.
 
 ## Project Structure
-```
+```text
 lead_management_system/
 ├── app/
 │   ├── __init__.py
@@ -157,6 +162,8 @@ lead_management_system/
 ├── .env                        # Environment variables (not in git)
 ├── .gitignore                  # Git ignore rules
 └── README.md                   # This file
+
+
 Configuration Details
 Google OAuth Setup
 
